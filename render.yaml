@@ -2,8 +2,9 @@ services:
   - type: web
     name: controle-pl-buritirana
     runtime: python
+    pythonVersion: "3.11.9"
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn server:app
+    startCommand: gunicorn server:app --timeout 120
     envVars:
       - key: SUPABASE_URL
         sync: false
