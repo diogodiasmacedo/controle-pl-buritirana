@@ -1,0 +1,8 @@
+flask
+flask-cors
+supabase
+pdfplumber
+pymupdf
+pytesseract
+pillow
+gunicorn

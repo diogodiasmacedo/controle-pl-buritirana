@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de PLs — Buritirana/MA</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0f2340;--navy2:#1a3660;--gold:#c8a000;--goldp:#fffbe6;--cream:#faf8f3;--ink:#1a1a2e;--muted:#6b7280;--bdr:#ddd8cc;--ok:#166534;--okbg:#dcfce7;--err:#991b1b;--errbg:#fee2e2;--wbg:#fef3c7}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Source Sans 3',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh}
+.hdr{background:var(--navy);padding:16px 28px;display:flex;align-items:center;gap:14px;border-bottom:3px solid var(--gold)}
+.seal{width:40px;height:40px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.hdr h1{font-family:'Playfair Display',serif;font-size:15px;color:#fff;font-weight:600}
+.hdr p{font-size:11px;color:rgba(255,255,255,.5);margin-top:1px;text-transform:uppercase;letter-spacing:.07em}
+.badge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.tabs{display:flex;background:var(--navy2);padding:0 28px}
+.tab{padding:9px 20px;font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;font-weight:500;user-select:none}
+.tab:hover{color:rgba(255,255,255,.85)}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.main{max-width:860px;margin:0 auto;padding:28px 20px}
+.drop{border:2px dashed var(--bdr);border-radius:10px;background:#fff;padding:44px 28px;text-align:center;cursor:pointer;transition:all .25s;position:relative}
+.drop:hover,.drop.drag{border-color:var(--gold);background:var(--goldp)}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:48px;margin-bottom:14px}
+.drop h2{font-family:'Playfair Display',serif;font-size:19px;color:var(--navy);margin-bottom:7px}
+.drop p{font-size:13px;color:var(--muted)}
+.hint{margin-top:10px;font-size:11px;color:var(--muted);background:var(--wbg);border-radius:6px;padding:5px 14px;display:inline-block}
+.fsel{margin-top:14px;background:#fff;border:1px solid var(--bdr);border-radius:9px;padding:14px 18px;display:flex;align-items:center;gap:12px}
+.fsel-icon{font-size:28px}
+.fsel-name{font-weight:600;font-size:13px;color:var(--navy)}
+.fsel-size{font-size:11px;color:var(--muted);margin-top:2px}
+.btn-rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px;margin-left:auto}
+.btn-rm:hover{color:var(--err)}
+.btn-ext{width:100%;margin-top:14px;padding:14px;background:var(--navy);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-ext:hover:not(:disabled){background:var(--navy2)}
+.btn-ext:disabled{opacity:.5;cursor:not-allowed}
+.lbar{margin-top:14px;background:var(--bdr);border-radius:20px;height:4px;overflow:hidden;display:none}
+.lbar.show{display:block}
+.lfill{height:100%;background:linear-gradient(90deg,var(--gold),var(--navy));border-radius:20px;animation:lb 1.8s ease-in-out infinite}
+@keyframes lb{0%{width:0;margin-left:0}50%{width:70%;margin-left:15%}100%{width:0;margin-left:100%}}
+.lmsg{text-align:center;font-size:12px;color:var(--muted);margin-top:7px;display:none}
+.lmsg.show{display:block}
+.res{margin-top:20px;background:#fff;border:1px solid var(--bdr);border-radius:10px;overflow:hidden;display:none}
+.res.show{display:block}
+.res-hdr{background:var(--navy);padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
+.res-hdr h3{font-family:'Playfair Display',serif;color:#fff;font-size:14px}
+.cbadge{font-size:10px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.8);padding:2px 9px;border-radius:12px}
+.fgrid{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg.full{grid-column:1/-1}
+.fg label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--navy)}
+.fg label .auto{color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;font-size:9px;margin-left:3px}
+.fg input,.fg select,.fg textarea{border:1.5px solid var(--bdr);border-radius:6px;padding:8px 11px;font-size:13px;font-family:inherit;color:var(--ink);background:var(--cream);outline:none;transition:border-color .2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--navy);background:#fff}
+.fg textarea{resize:vertical;min-height:68px}
+.ai{background:var(--goldp)!important;border-color:var(--gold)!important}
+.law-g{grid-column:1/-1;background:var(--goldp);border:2px solid var(--gold);border-radius:9px;padding:14px}
+.law-g .law-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gold);display:block;margin-bottom:5px}
+.law-g input{border:1.5px solid var(--gold);border-radius:6px;padding:8px 11px;font-size:15px;font-weight:600;color:var(--navy);background:#fff;font-family:inherit;outline:none;width:100%}
+.law-hint{font-size:10px;color:var(--muted);font-style:italic;margin-top:4px}
+.factions{padding:14px 20px;border-top:1px solid var(--bdr);display:flex;gap:8px}
+.btn{padding:9px 18px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;gap:6px}
+.btn-gold{background:var(--gold);color:var(--navy)}
+.btn-gold:hover{background:#b08e00}
+.btn-sec{background:var(--cream);color:var(--navy);border:1.5px solid var(--bdr)}
+.btn-sec:hover{border-color:var(--navy)}
+.rh{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.rh h2{font-family:'Playfair Display',serif;font-size:20px;color:var(--navy)}
+.rcnt{font-size:11px;background:var(--navy);color:#fff;padding:3px 11px;border-radius:20px}
+.empty{text-align:center;padding:56px 20px;color:var(--muted)}
+.empty .ei{font-size:48px;margin-bottom:14px}
+.empty h3{font-family:'Playfair Display',serif;color:var(--navy);margin-bottom:6px}
+.twrap{overflow-x:auto;border-radius:9px;border:1px solid var(--bdr)}
+table{width:100%;border-collapse:collapse;background:#fff;font-size:12px}
+thead{background:var(--navy)}
+thead th{padding:11px 13px;text-align:left;color:rgba(255,255,255,.8);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+thead th.gc{color:var(--gold)}
+tbody tr{border-bottom:1px solid var(--bdr);transition:background .15s}
+tbody tr:hover{background:var(--cream)}
+tbody tr:last-child{border-bottom:none}
+tbody td{padding:10px 13px;vertical-align:top}
+.pn{font-weight:700;color:var(--navy);white-space:nowrap}
+.po{line-height:1.4;max-width:240px}
+.pd{color:var(--muted);white-space:nowrap;font-size:11px}
+.badge-r{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.b-aprovado{background:var(--okbg);color:var(--ok)}
+.b-rejeitado{background:var(--errbg);color:var(--err)}
+.b-pendente{background:var(--wbg);color:#92400e}
+.b-arquivado{background:#f3f4f6;color:#6b7280}
+.lc{font-weight:700;color:var(--navy);background:var(--goldp);border-radius:4px;padding:2px 7px;font-size:11px;white-space:nowrap;display:inline-block}
+.lc.mt{color:var(--muted);font-weight:400;background:none;padding:0}
+.br{background:none;border:none;cursor:pointer;font-size:14px;padding:2px 4px;color:var(--muted)}
+.br:hover{color:var(--navy)}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--navy);color:#fff;padding:11px 20px;border-radius:7px;font-size:12px;font-weight:500;box-shadow:0 6px 20px rgba(0,0,0,.2);transition:transform .3s;z-index:9999}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.s{background:var(--ok)}
+.toast.e{background:var(--err)}
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.mo.show{display:flex}
+.modal{background:#fff;border-radius:12px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 56px rgba(0,0,0,.25)}
+.mhdr{background:var(--navy);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-radius:12px 12px 0 0;position:sticky;top:0}
+.mhdr h3{font-family:'Playfair Display',serif;color:#fff;font-size:15px}
+.bclose{background:none;border:none;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer}
+.mbody{padding:20px}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.mg .fg{display:flex;flex-direction:column;gap:4px}
+.mg .fg.full{grid-column:1/-1}
+.mg .fg label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--navy)}
+.mg .fg input,.mg .fg select,.mg .fg textarea{border:1.5px solid var(--bdr);border-radius:6px;padding:8px 11px;font-size:13px;font-family:inherit;color:var(--ink);background:var(--cream);outline:none}
+.mg .fg input:focus,.mg .fg select:focus,.mg .fg textarea:focus{border-color:var(--navy);background:#fff}
+.mg .fg textarea{resize:vertical;min-height:60px}
+.macts{padding:14px 20px;border-top:1px solid var(--bdr);display:flex;gap:8px;justify-content:flex-end}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="seal">⚖️</div>
+  <div>
+    <h1>Controle de Projetos de Lei — Poder Executivo</h1>
+    <p>Prefeitura Municipal de Buritirana · Estado do Maranhão</p>
+  </div>
+  <div class="badge">☁️ NUVEM</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('upload')">📄 Novo Registro</div>
+  <div class="tab" onclick="switchTab('registros')">📋 Todos os Registros</div>
+</div>
+
+<div class="main">
+  <div id="panel-upload">
+
+    <div class="drop" id="drop" ondragover="onDrag(event,true)" ondragleave="onDrag(event,false)" ondrop="onDrop(event)">
+      <input type="file" accept=".pdf" onchange="onFile(event)" id="fi">
+      <div class="drop-icon">📑</div>
+      <h2>Anexe o Projeto de Lei em PDF</h2>
+      <p>Arraste o arquivo aqui ou clique para selecionar</p>
+      <span class="hint">Extração automática e gratuita: número, ementa, tipo, data e autoria</span>
+    </div>
+
+    <div class="fsel" id="fsel" style="display:none">
+      <div class="fsel-icon">📄</div>
+      <div style="flex:1">
+        <div class="fsel-name" id="fname"></div>
+        <div class="fsel-size" id="fsize"></div>
+      </div>
+      <button class="btn-rm" onclick="rmFile()">✕</button>
+    </div>
+
+    <div class="lbar" id="lbar"><div class="lfill"></div></div>
+    <div class="lmsg" id="lmsg">🔍 Lendo o projeto de lei…</div>
+
+    <button class="btn-ext" id="btnExt" onclick="extract()" disabled>
+      🔍 Extrair Informações Automaticamente
+    </button>
+
+    <div class="res" id="res">
+      <div class="res-hdr">
+        <h3>📋 Informações extraídas — revise e complemente</h3>
+        <span class="cbadge">Amarelo = preenchido automaticamente</span>
+      </div>
+      <div class="fgrid">
+        <div class="fg">
+          <label>Número do Projeto <span class="auto">auto</span></label>
+          <input type="text" id="f_numero" placeholder="Ex: PL nº 001/2026" class="ai">
+        </div>
+        <div class="fg">
+          <label>Tipo <span class="auto">auto</span></label>
+          <select id="f_tipo" class="ai">
+            <option value="">— selecione —</option>
+            <option>Ordinário</option><option>Complementar</option><option>Decreto Legislativo</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Data do Projeto <span class="auto">auto</span></label>
+          <input type="text" id="f_data" placeholder="dd/mm/aaaa" class="ai">
+        </div>
+        <div class="fg">
+          <label>Autoria <span class="auto">auto</span></label>
+          <input type="text" id="f_autoria" placeholder="Ex: Poder Executivo" class="ai">
+        </div>
+        <div class="fg full">
+          <label>Ementa / Objeto <span class="auto">auto</span></label>
+          <textarea id="f_ementa" placeholder="Descrição do objeto do projeto…" class="ai"></textarea>
+        </div>
+        <div class="fg">
+          <label>Resultado na Câmara</label>
+          <select id="f_resultado">
+            <option value="Pendente">⏳ Pendente</option>
+            <option value="Aprovado">✅ Aprovado</option>
+            <option value="Rejeitado">❌ Rejeitado</option>
+            <option value="Arquivado">📁 Arquivado</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Data da Votação</label>
+          <input type="text" id="f_dataVot" placeholder="dd/mm/aaaa">
+        </div>
+        <div class="law-g">
+          <span class="law-lbl">⭐ Nº da Lei Resultante da Promulgação</span>
+          <input type="text" id="f_lei" placeholder="Ex: Lei nº 145/2026">
+          <div class="law-hint">Deixe em branco enquanto o PL tramita. Preencha após a promulgação e publicação.</div>
+        </div>
+        <div class="fg full">
+          <label>Observações</label>
+          <textarea id="f_obs" placeholder="Emendas, vetos, diligências…"></textarea>
+        </div>
+      </div>
+      <div class="factions">
+        <button class="btn btn-gold" onclick="saveRec()">💾 Salvar Registro</button>
+        <button class="btn btn-sec" onclick="clearForm()">🔄 Limpar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-registros" style="display:none">
+    <div class="rh">
+      <h2>Projetos de Lei Cadastrados</h2>
+      <span class="rcnt" id="rcnt">0 registros</span>
+    </div>
+    <div id="rbody"></div>
+  </div>
+</div>
+
+<div class="mo" id="editModal">
+  <div class="modal">
+    <div class="mhdr">
+      <h3>✏️ Editar Registro</h3>
+      <button class="bclose" onclick="closeModal()">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="mg">
+        <div class="fg"><label>Número do Projeto</label><input type="text" id="e_numero"></div>
+        <div class="fg"><label>Tipo</label>
+          <select id="e_tipo"><option>Ordinário</option><option>Complementar</option><option>Decreto Legislativo</option></select></div>
+        <div class="fg"><label>Data do Projeto</label><input type="text" id="e_data"></div>
+        <div class="fg"><label>Autoria</label><input type="text" id="e_autoria"></div>
+        <div class="fg full"><label>Ementa / Objeto</label><textarea id="e_ementa"></textarea></div>
+        <div class="fg"><label>Resultado</label>
+          <select id="e_resultado">
+            <option value="Pendente">⏳ Pendente</option><option value="Aprovado">✅ Aprovado</option>
+            <option value="Rejeitado">❌ Rejeitado</option><option value="Arquivado">📁 Arquivado</option>
+          </select></div>
+        <div class="fg"><label>Data da Votação</label><input type="text" id="e_dataVot"></div>
+        <div class="fg full" style="background:var(--goldp);border:2px solid var(--gold);border-radius:8px;padding:13px">
+          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gold);display:block;margin-bottom:5px">⭐ Nº da Lei Resultante</label>
+          <input type="text" id="e_lei" style="border:1.5px solid var(--gold);border-radius:6px;padding:8px 11px;font-size:14px;font-weight:600;color:var(--navy);background:#fff;font-family:inherit;outline:none;width:100%">
+        </div>
+        <div class="fg full"><label>Observações</label><textarea id="e_obs"></textarea></div>
+      </div>
+    </div>
+      <!-- DOCUMENTOS -->
+      <div style="margin-top:20px;border-top:1px solid var(--bdr);padding-top:18px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--navy);margin-bottom:12px">📎 Documentos Anexados</div>
+
+        <div id="docDrop" ondragover="onDocDrag(event,true)" ondragleave="onDocDrag(event,false)" ondrop="onDocDrop(event)"
+          style="border:2px dashed var(--bdr);border-radius:8px;padding:18px;text-align:center;cursor:pointer;position:relative;transition:all .2s;background:var(--cream)">
+          <input type="file" id="docFile" multiple onchange="onDocFile(event)"
+            style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">
+          <p style="font-size:12px;color:var(--muted)">📂 Arraste arquivos aqui ou clique para selecionar<br>
+            <small>PDF, Word, imagens — qualquer formato</small></p>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input type="text" id="docDesc" placeholder="Descrição (ex: Ata de aprovação, Publicação no DOE…)"
+            style="flex:1;border:1.5px solid var(--bdr);border-radius:6px;padding:7px 10px;font-size:12px;font-family:inherit;color:var(--ink);background:var(--cream);outline:none">
+          <button class="btn btn-navy" onclick="uploadDocFile()" id="btnUpDoc" disabled
+            style="white-space:nowrap;background:var(--navy);color:#fff">📤 Anexar</button>
+        </div>
+
+        <div id="docList" style="margin-top:12px;display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+    </div>
+    <div class="macts">
+      <button class="btn btn-sec" onclick="closeModal()">Fechar</button>
+      <button class="btn btn-gold" onclick="saveEdit()">💾 Salvar Alterações</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = window.location.origin + '/api';
+let currentFile = null, editId = null, pendingDocFile = null;
+
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach((el,i) =>
+    el.classList.toggle('active',(t==='upload'&&i===0)||(t==='registros'&&i===1)));
+  document.getElementById('panel-upload').style.display = t==='upload'?'block':'none';
+  document.getElementById('panel-registros').style.display = t==='registros'?'block':'none';
+  if (t==='registros') renderTable();
+}
+
+function onDrag(e,o){e.preventDefault();document.getElementById('drop').classList.toggle('drag',o)}
+function onDrop(e){
+  e.preventDefault();document.getElementById('drop').classList.remove('drag');
+  const f=e.dataTransfer.files[0];
+  if(f&&f.type==='application/pdf')setFile(f);else toast('Selecione um arquivo PDF.','e');
+}
+function onFile(e){const f=e.target.files[0];if(f)setFile(f);}
+function setFile(f){
+  currentFile=f;
+  document.getElementById('fname').textContent=f.name;
+  document.getElementById('fsize').textContent=(f.size/1024/1024).toFixed(2)+' MB';
+  document.getElementById('fsel').style.display='flex';
+  document.getElementById('res').classList.remove('show');
+  document.getElementById('btnExt').disabled=false;
+}
+function rmFile(){
+  currentFile=null;document.getElementById('fi').value='';
+  document.getElementById('fsel').style.display='none';
+  document.getElementById('res').classList.remove('show');
+  document.getElementById('btnExt').disabled=true;
+}
+
+async function extract(){
+  if(!currentFile)return;
+  document.getElementById('btnExt').disabled=true;
+  document.getElementById('lbar').classList.add('show');
+  document.getElementById('lmsg').classList.add('show');
+  document.getElementById('res').classList.remove('show');
+  try{
+    const fd=new FormData();fd.append('file',currentFile);
+    const r=await fetch(`${API}/extract`,{method:'POST',body:fd});
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Erro desconhecido');
+    const p=d.data;
+    document.getElementById('f_numero').value=p.numero||'';
+    document.getElementById('f_tipo').value=p.tipo||'';
+    document.getElementById('f_data').value=p.data||'';
+    document.getElementById('f_autoria').value=p.autoria||'';
+    document.getElementById('f_ementa').value=p.ementa||'';
+    document.getElementById('f_resultado').value='Pendente';
+    document.getElementById('f_dataVot').value='';
+    document.getElementById('f_lei').value='';
+    document.getElementById('f_obs').value='';
+    document.getElementById('res').classList.add('show');
+    toast('✅ Extração concluída! Revise e complemente os campos.','s');
+  }catch(err){toast('Erro: '+err.message,'e');}
+  finally{
+    document.getElementById('btnExt').disabled=false;
+    document.getElementById('lbar').classList.remove('show');
+    document.getElementById('lmsg').classList.remove('show');
+  }
+}
+
+async function saveRec(){
+  const num=document.getElementById('f_numero').value.trim();
+  const ementa=document.getElementById('f_ementa').value.trim();
+  if(!num){toast('Informe o número do projeto.','e');return;}
+  if(!ementa){toast('Informe a ementa.','e');return;}
+  const rec={
+    numero:num,tipo:document.getElementById('f_tipo').value,
+    data:document.getElementById('f_data').value,
+    autoria:document.getElementById('f_autoria').value,ementa,
+    resultado:document.getElementById('f_resultado').value,
+    data_votacao:document.getElementById('f_dataVot').value,
+    lei:document.getElementById('f_lei').value,
+    observacoes:document.getElementById('f_obs').value,
+  };
+  const r=await fetch(`${API}/registros`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(rec)});
+  const d=await r.json();
+  if(r.ok){toast('✅ Registro salvo!','s');clearForm();setTimeout(()=>switchTab('registros'),900);}
+  else toast('Erro: '+(d.error||'ao salvar'),'e');
+}
+
+function clearForm(){
+  ['f_numero','f_tipo','f_data','f_autoria','f_ementa','f_dataVot','f_lei','f_obs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f_resultado').value='Pendente';
+  document.getElementById('res').classList.remove('show');
+  rmFile();
+}
+
+async function renderTable(){
+  const el=document.getElementById('rbody');
+  el.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Carregando…</div>';
+  const r=await fetch(`${API}/registros`);
+  const recs=await r.json();
+  document.getElementById('rcnt').textContent=recs.length+' registro'+(recs.length!==1?'s':'');
+  if(!recs.length){
+    el.innerHTML=`<div class="empty"><div class="ei">📂</div><h3>Nenhum projeto cadastrado ainda</h3><p>Use a aba "Novo Registro" para adicionar o primeiro PL.</p></div>`;
+    return;
+  }
+  const rows=recs.map(r=>`<tr>
+    <td><span class="pn">${r.numero||'—'}</span></td>
+    <td><div class="po">${r.ementa||'—'}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${r.tipo||''}${r.autoria?' · '+r.autoria:''}</div></td>
+    <td class="pd">${r.data||'—'}</td>
+    <td><span class="badge-r b-${(r.resultado||'pendente').toLowerCase()}">${r.resultado||'Pendente'}</span>${r.data_votacao?`<div style="font-size:10px;color:var(--muted);margin-top:2px">${r.data_votacao}</div>`:''}</td>
+    <td>${r.lei?`<span class="lc">${r.lei}</span>`:`<span class="lc mt">—</span>`}</td>
+    <td>
+      <button class="br" onclick='openEdit(${JSON.stringify(r)})' title="Editar / Documentos">📎 Editar</button>
+      <button class="br" onclick="delRec('${r.id}')" title="Excluir">🗑️</button>
+    </td>
+  </tr>`).join('');
+  el.innerHTML=`<div class="twrap"><table>
+    <thead><tr><th>Nº do Projeto</th><th>Objeto / Ementa</th><th>Data</th><th>Resultado</th><th class="gc">⭐ Nº da Lei</th><th></th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+function openEdit(r){
+  editId=r.id;
+  document.getElementById('e_numero').value=r.numero||'';
+  document.getElementById('e_tipo').value=r.tipo||'Ordinário';
+  document.getElementById('e_data').value=r.data||'';
+  document.getElementById('e_autoria').value=r.autoria||'';
+  document.getElementById('e_ementa').value=r.ementa||'';
+  document.getElementById('e_resultado').value=r.resultado||'Pendente';
+  document.getElementById('e_dataVot').value=r.data_votacao||'';
+  document.getElementById('e_lei').value=r.lei||'';
+  document.getElementById('e_obs').value=r.observacoes||'';
+  pendingDocFile=null;
+  document.getElementById('docFile').value='';
+  document.getElementById('docDesc').value='';
+  document.getElementById('btnUpDoc').disabled=true;
+  document.getElementById('editModal').classList.add('show');
+  loadDocs(r.id);
+}
+function closeModal(){document.getElementById('editModal').classList.remove('show');editId=null;}
+
+async function saveEdit(){
+  if(!editId)return;
+  const u={
+    numero:document.getElementById('e_numero').value,
+    tipo:document.getElementById('e_tipo').value,
+    data:document.getElementById('e_data').value,
+    autoria:document.getElementById('e_autoria').value,
+    ementa:document.getElementById('e_ementa').value,
+    resultado:document.getElementById('e_resultado').value,
+    data_votacao:document.getElementById('e_dataVot').value,
+    lei:document.getElementById('e_lei').value,
+    observacoes:document.getElementById('e_obs').value,
+  };
+  const r=await fetch(`${API}/registros/${editId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(u)});
+  if(r.ok){renderTable();toast('✅ Registro atualizado!','s');}
+  else toast('Erro ao salvar.','e');
+}
+
+async function delRec(id){
+  if(!confirm('Confirma a exclusão deste registro e todos os documentos vinculados?'))return;
+  await fetch(`${API}/registros/${id}`,{method:'DELETE'});
+  renderTable();toast('Registro removido.','');
+}
+
+// ── Documentos ────────────────────────────────────────────────────────────────
+function onDocDrag(e,o){e.preventDefault();document.getElementById('docDrop').style.borderColor=o?'var(--gold)':'var(--bdr)';document.getElementById('docDrop').style.background=o?'var(--goldp)':'var(--cream)';}
+function onDocDrop(e){e.preventDefault();onDocDrag(e,false);const f=e.dataTransfer.files[0];if(f)setDocFile(f);}
+function onDocFile(e){const f=e.target.files[0];if(f)setDocFile(f);}
+function setDocFile(f){
+  pendingDocFile=f;
+  document.getElementById('docDrop').querySelector('p').innerHTML=
+    `📄 <strong>${f.name}</strong> (${(f.size/1024).toFixed(0)} KB)<br><small>Pronto para anexar — informe a descrição abaixo</small>`;
+  document.getElementById('btnUpDoc').disabled=false;
+}
+
+async function uploadDocFile(){
+  if(!pendingDocFile||!editId)return;
+  const desc=document.getElementById('docDesc').value.trim()||pendingDocFile.name;
+  document.getElementById('btnUpDoc').disabled=true;
+  const el=document.getElementById('docList');
+  el.insertAdjacentHTML('afterbegin','<div style="text-align:center;padding:8px;font-size:11px;color:var(--muted);font-style:italic">⏳ Enviando arquivo…</div>');
+  const fd=new FormData();
+  fd.append('file',pendingDocFile);
+  fd.append('descricao',desc);
+  const r=await fetch(`${API}/registros/${editId}/documentos`,{method:'POST',body:fd});
+  const d=await r.json();
+  if(r.ok){
+    toast('✅ Documento anexado!','s');
+    pendingDocFile=null;
+    document.getElementById('docFile').value='';
+    document.getElementById('docDesc').value='';
+    document.getElementById('docDrop').querySelector('p').innerHTML=
+      '📂 Arraste arquivos aqui ou clique para selecionar<br><small>PDF, Word, imagens — qualquer formato</small>';
+    loadDocs(editId);
+  }else{
+    toast('Erro: '+(d.error||'ao enviar'),'e');
+    document.getElementById('btnUpDoc').disabled=false;
+    el.querySelector('div')?.remove();
+  }
+}
+
+async function loadDocs(rid){
+  const el=document.getElementById('docList');
+  el.innerHTML='<div style="text-align:center;padding:8px;font-size:11px;color:var(--muted)">Carregando…</div>';
+  const r=await fetch(`${API}/registros/${rid}/documentos`);
+  const docs=await r.json();
+  if(!docs.length){
+    el.innerHTML='<div style="text-align:center;padding:8px;font-size:11px;color:var(--muted);font-style:italic">Nenhum documento anexado ainda.</div>';
+    return;
+  }
+  const icons={'PDF':'📄','DOC':'📝','DOCX':'📝','XLS':'📊','XLSX':'📊','JPG':'🖼️','PNG':'🖼️','JPEG':'🖼️'};
+  el.innerHTML=docs.map(d=>`
+    <div style="display:flex;align-items:center;gap:10px;background:var(--cream);border:1px solid var(--bdr);border-radius:7px;padding:9px 12px">
+      <div style="font-size:20px;flex-shrink:0">${icons[d.tipo]||'📎'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.descricao||d.nome}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:1px">${d.nome} · ${d.tipo||'?'} · ${(d.tamanho/1024).toFixed(0)} KB</div>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <a href="${d.url}" target="_blank" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted);padding:2px 4px;text-decoration:none" title="Abrir">🔗</a>
+        <button onclick="delDoc('${d.id}')" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--muted);padding:2px 4px" title="Excluir">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+async function delDoc(did){
+  if(!confirm('Excluir este documento?'))return;
+  await fetch(`${API}/documentos/${did}`,{method:'DELETE'});
+  loadDocs(editId);
+  toast('Documento removido.','');
+}
+
+function toast(msg,tp=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast'+(tp?' '+tp:'');
+  setTimeout(()=>t.classList.add('show'),10);
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+</script>
+</body>
+</html>
